@@ -6,9 +6,11 @@
     <title>PortoUX – Framework Visual para o Setor Portuário</title>
     <link rel="stylesheet" type="text/css" href="./mani-porto.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="v2-data-porto.js"></script>
-      <script src="https://cdn.userway.org/widget.js" data-account="09FcxZNn6a"></script>
+
+    <script src="https://cdn.userway.org/widget.js" data-account="09FcxZNn6a"></script>
     
     <style>
         .access-button {
@@ -18,13 +20,14 @@
 </head>
 
 <body>
+
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
             <div class="vw-plugin-top-wrapper"></div>
         </div>
     </div>
-    <div class="container">
+<div class="container">
 
         <header class="framework-header">
             <div class="header-content">
@@ -44,6 +47,7 @@
                     do Financial Times.
                 </p>
             </div>
+
         </header>
 
         <div id="timeline-container"></div>
@@ -51,7 +55,6 @@
 
     </div>
 
-    <!-- ESTRUTURA DO MODAL DE IMAGEM (LIGHTBOX) -->
     <div id="image-modal" class="image-modal-overlay">
         <div class="image-modal-content">
             <span class="image-modal-close">&times;</span>
@@ -60,118 +63,85 @@
         </div>
     </div>
 
+   
     <script>
         const plotCategories = catData.categories;
         let currentOpenCategory = null;
 
-        const lineFunction = d3.svg.line()
-            .x(d => d.x)
-            .y(d => d.y)
-            .interpolate("linear");
-
-        function createTimeline() {
+        function createCategoryNav() {
             const timelineContainer = d3.select("#timeline-container");
+            timelineContainer.html("");
 
-            const timeline = timelineContainer.append("svg")
-                .attr("class", "timeline")
-                .attr("width", "100%")
-                .attr("height", 50);
+            const nav = timelineContainer.append("nav").attr("class", "category-nav");
+            
+            
+            nav.append("div").attr("class", "nav-background-line");
 
-            const categoryWidth = 100 / plotCategories.length;
-
-            plotCategories.forEach((cat, i) => {
-                const g = timeline.append("g")
-                    .attr("class", "category-button")
-                    .attr("data-category", cat.category)
-                    .style("cursor", "pointer")
-                    .on("click", function () {
+            plotCategories.forEach(cat => {
+                const button = nav.append("a")
+                    .attr("class", "category-button-html")
+                    .attr("href", "#")
+                    .on("click", function() {
+                        d3.event.preventDefault();
                         toggleCategory(cat);
                     });
 
-                g.append("text")
-                    .attr("x", `${i * categoryWidth + categoryWidth / 2}%`)
-                    .attr("y", 25)
-                    .attr("text-anchor", "middle")
-                    .attr("fill", cat.colour)
-                    .attr("font-size", "15px")
-                    .attr("font-weight", "600")
+                button.append("span")
+                    .attr("class", "category-text")
+                    .style("color", cat.colour)
                     .text(cat.category);
-
-                g.append("rect")
-                    .attr("x", `${i * categoryWidth}%`)
-                    .attr("y", 45)
-                    .attr("width", `${categoryWidth}%`)
-                    .attr("height", 5)
-                    .attr("fill", cat.colour)
-                    .attr("class", "category-rect");
+                
+             
+                button.append("div")
+                    .attr("class", "category-underline")
+                    .style("background-color", cat.colour);
             });
-
-            timeline.append("path")
-                .attr("id", "connection-line")
-                .attr("stroke", "#333")
-                .attr("stroke-width", 3)
-                .attr("fill", "none")
-                .style("opacity", 0);
         }
 
         function toggleCategory(category) {
             const infoPanel = d3.select("#info-panel");
-            const connectionPath = d3.select("#connection-line");
+            
+           
+            d3.selectAll('.category-button-html').classed('active', false);
 
             if (currentOpenCategory === category.category) {
-                infoPanel.transition().duration(300)
-                    .style("max-height", "0px")
-                    .style("opacity", 0)
-                    .style("margin-top", "0px");
-                connectionPath.transition().duration(300).style("opacity", 0);
+                infoPanel.transition().duration(300).style("max-height", "0px").style("opacity", 0).style("margin-top", "0px");
                 currentOpenCategory = null;
                 return;
             }
 
             currentOpenCategory = category.category;
-
-            const categoryIndex = plotCategories.findIndex(c => c.category === category.category);
-            const categoryWidth = 100 / plotCategories.length;
-            const timelineWidth = d3.select(".timeline").node().getBoundingClientRect().width;
-            const lineX = (categoryIndex * categoryWidth + categoryWidth / 2) / 100 * timelineWidth;
             
-            const pathData = [
-                { x: lineX, y: 50 },
-                { x: lineX, y: 60 },
-                { x: lineX, y: 60 },
-                { x: lineX, y: 90 }
-            ];
-
-            connectionPath
-                .attr("stroke", category.colour)
-                .attr("d", lineFunction(pathData))
-                .transition().duration(300)
-                .style("opacity", 1);
+   
+            d3.selectAll('.category-button-html').each(function() {
+                const buttonNode = this;
+                if (buttonNode.textContent.trim() === category.category) {
+                    d3.select(buttonNode).classed('active', true);
+                }
+            });
 
             infoPanel.transition().duration(100).style("margin-top", "32px");
             infoPanel.html("");
 
-            const panel = infoPanel.append("div")
-                .attr("class", "info-panel-content")
-                .style("background-color", category.colour);
-
+            const panel = infoPanel.append("div").attr("class", "info-panel-content").style("background-color", category.colour);
             panel.append("h2").attr("class", "panel-title").text(category.category);
             panel.append("p").attr("class", "panel-description").text(category.description);
             panel.append("h3").attr("class", "panel-subhead").text("Exemplo aplicado");
 
-            // O parágrafo de exemplo agora é um link clicável que ativa o modal
-            const exampleLink = panel.append("a")
-                .attr("href", "#")
-                .attr("class", "panel-example example-trigger")
-                .attr("data-img", category.example.img)
-                .attr("data-caption", category.example.text);
+            const exampleLink = panel.append("a").attr("href", "#").attr("class", "panel-example example-trigger").attr("data-img", category.example.img).attr("data-caption", category.example.text);
             
-            exampleLink.html(category.example.text + ` <span class="view-icon">👁️</span>`);
+           
+            exampleLink.html(category.example.text + 
+            ` <span class="view-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 0 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 1 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.118a.5.5 0 0 1-.447-.276l-1.232-2.465-2.512-4.185a.517.517 0 0 1 .809-.631l2.41 2.41A.5.5 0 0 0 6 9.5V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v6.543L3.443 6.736A1.517 1.517 0 0 0 1.07 8.588l2.491 4.153 1.215 2.43A1.5 1.5 0 0 0 6.118 16h6.302a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+                </svg>
+              </span>`
+            );
 
             panel.append("h3").attr("class", "panel-subhead").text("Boas práticas e componentes");
-
+            
             const cardsContainer = panel.append("div").attr("class", "cards-container");
-
             category.children.forEach(child => {
                 const card = cardsContainer.append("div").attr("class", "chart-card");
                 card.append("div").attr("class", "chart-icon").style("background-color", "rgba(0, 0, 0, 0.2)").html(getIconSVG(child.name));
@@ -190,19 +160,16 @@
                     child.evite.forEach(item => dontList.append("li").text(item));
                 }
             });
-
             infoPanel.transition().duration(300).style("max-height", "5000px").style("opacity", 1);
         }
 
-        createTimeline();
+        createCategoryNav();
 
-        // O MODAL DE IMAGEM
         function setupModal() {
             const modal = document.getElementById('image-modal');
             const modalImg = modal.querySelector('.image-modal-img');
             const modalCaption = modal.querySelector('.image-modal-caption');
             const closeBtn = modal.querySelector('.image-modal-close');
-
             document.body.addEventListener('click', function(event) {
                 const trigger = event.target.closest('.example-trigger');
                 if (trigger) {
@@ -212,31 +179,15 @@
                     modal.classList.add('active');
                 }
             });
-
-            function closeModal() {
-                modal.classList.remove('active');
-            }
-
+            function closeModal() { modal.classList.remove('active'); }
             closeBtn.addEventListener('click', closeModal);
-            modal.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
+            modal.addEventListener('click', function(event) { if (event.target === modal) { closeModal(); } });
         }
-
-        setupModal(); 
-
-        window.addEventListener("resize", () => {
-            if (currentOpenCategory) {
-                const category = plotCategories.find(c => c.category === currentOpenCategory);
-                toggleCategory(category);
-                toggleCategory(category);
-            }
-        });
+        setupModal();
     </script>
-
+  
     <script>
+       
         const ICONS = {
             "Paleta Semântica do Porto": `<svg viewBox="0 0 64 64"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#58D68D;" /><stop offset="100%" style="stop-color:#28a745;" /></linearGradient><linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#F7DC6F;" /><stop offset="100%" style="stop-color:#FBC02D;" /></linearGradient><linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#F1948A;" /><stop offset="100%" style="stop-color:#dc3545;" /></linearGradient></defs><g transform="rotate(10 32 32)"><rect x="10" y="12" width="12" height="40" rx="4" fill="url(#g1)" /><rect x="26" y="12" width="12" height="40" rx="4" fill="url(#g2)" /><rect x="42" y="12" width="12" height="40" rx="4" fill="url(#g3)" /></g></svg>`,
             "Tipografia Robusta": `<svg viewBox="0 0 64 64"><g fill="#E0E1DD"><text x="12" y="52" font-size="48" font-family="Roboto, sans-serif" font-weight="700">A</text><text x="40" y="52" font-size="32" font-family="Roboto, sans-serif" font-weight="400">a</text></g></svg>`,
@@ -269,20 +220,20 @@
             "Narrativa e Anotações": `<svg viewBox="0 0 64 64"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path d="M10 50 C 18 25, 30 22, 38, 34 C 46 46, 50 42, 54 30" stroke="#63a4ff" stroke-width="3"/><rect x="12" y="12" width="20" height="12" rx="2" fill="rgba(65, 90, 119, 0.7)" stroke="#E0E1DD"/><path d="M22 24 L 36 32" stroke="#E0E1DD" stroke-dasharray="3 3"/></g></svg>`,
             "Indicadores de Incerteza": `<svg viewBox="0 0 64 64"><g stroke-linecap="round" stroke-linejoin="round"><path d="M10 44 C 20 16, 40 16, 54 44" fill="rgba(99, 164, 255, 0.3)" stroke="none" /><path d="M10 44 C 20 16, 40 16, 54 44" fill="none" stroke="#63a4ff" stroke-width="3" stroke-dasharray="1 6"/></g></svg>`
         };
-
         function getDefaultIconSVG() {
             return `<svg viewBox="0 0 64 64" role="img" aria-label="Visual"><g fill="none" stroke="#E0E1DD" stroke-width="2.5" stroke-linecap="round"><rect x="10" y="12" width="44" height="36" rx="4"/><circle cx="24" cy="30" r="6"/><line x1="34" y1="30" x2="48" y2="30"/></g></svg>`;
         }
-
         function getIconSVG(name) {
             return ICONS[name] || getDefaultIconSVG();
         }
     </script>
+    
+    <!-- Scripts de Acessibilidade -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script>
         new window.VLibras.Widget('https://vlibras.gov.br/app');
     </script>
     <script src="acessibilidade.js"></script>
-
+    
 </body>
 </html>
